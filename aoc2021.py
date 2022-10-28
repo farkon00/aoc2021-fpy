@@ -1,10 +1,9 @@
-from pprint import pprint
 import sys
 
 from functools import reduce
 from types import FunctionType
 
-from aoc_inp import boards, draws
+from aoc_inp import inp
 
 sys.setrecursionlimit(1_000_000_000)
 
@@ -141,3 +140,52 @@ def problem4_2_get_worst_board(boards: list[list[list[tuple[int, bool]]]], draws
 
 def problem4_2(boards: list[list[list[int]]], draws: list[int]):
     return problem4_1_get_score(*problem4_2_get_worst_board(problem4_1_get_draw_boards(boards), draws))
+
+
+def problem5_1_count(field: list[list[int]]):
+    return sum(map(lambda x: sum(map(lambda y: 1 if y > 1 else 0, x)), field))
+
+def problem5_1_execute(instrs: list[tuple[tuple[int, int], tuple[int, int]]], field: list[list[int]]):
+    match instrs:
+        case []:
+            return field
+        case [((x1, y1), (x2, y2)), *instrs_left] if x1 == x2: 
+            return problem5_1_execute(instrs_left, [
+                [cell+1 if coli == x1 else cell for coli, cell in enumerate(row)] 
+                if y1 <= rowi <= y2 or y1 >= rowi >= y2 else row 
+                for rowi, row in enumerate(field)])
+        case [((x1, y1), (x2, y2)), *instrs_left] if y1 == y2: 
+            return problem5_1_execute(instrs_left, [
+                [cell+1 if x1 <= coli <= x2 or x1 >= coli >= x2 else cell for coli, cell in enumerate(row)] 
+                if rowi == y1 else row 
+                for rowi, row in enumerate(field)])
+        case [_, *instrs_left]:
+            return problem5_1_execute(instrs_left, field)
+
+def problem5_1(inp: list[tuple[tuple[int, int], tuple[int, int]]]):
+    return problem5_1_count(problem5_1_execute(inp, [[0 for _ in range(1000)] for _ in range(1000)]))
+
+
+def problem5_2_execute(instrs: list[tuple[tuple[int, int], tuple[int, int]]], field: list[list[int]]):
+    match instrs:
+        case []:
+            return field
+        case [((x1, y1), (x2, y2)), *instrs_left] if x1 == x2: 
+            return problem5_2_execute(instrs_left, [
+                [cell+1 if coli == x1 else cell for coli, cell in enumerate(row)] 
+                if y1 <= rowi <= y2 or y1 >= rowi >= y2 else row 
+                for rowi, row in enumerate(field)])
+        case [((x1, y1), (x2, y2)), *instrs_left] if y1 == y2: 
+            return problem5_2_execute(instrs_left, [
+                [cell+1 if x1 <= coli <= x2 or x1 >= coli >= x2 else cell for coli, cell in enumerate(row)] 
+                if rowi == y1 else row 
+                for rowi, row in enumerate(field)])
+        case [((x1, y1), (x2, y2)), *instrs_left]:
+            return problem5_2_execute(instrs_left, [
+                [cell+1 if (x1 <= coli <= x2 or x1 >= coli >= x2) and abs(x1-coli) == abs(y1-rowi) else cell 
+                for coli, cell in enumerate(row)] 
+                if y1 <= rowi <= y2 or y1 >= rowi >= y2 else row 
+                for rowi, row in enumerate(field)])
+
+def problem5_2(inp: list[tuple[tuple[int, int], tuple[int, int]]]):
+    return problem5_1_count(problem5_2_execute(inp, [[0 for _ in range(1000)] for _ in range(1000)]))
