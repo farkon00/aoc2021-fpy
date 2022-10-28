@@ -189,3 +189,12 @@ def problem5_2_execute(instrs: list[tuple[tuple[int, int], tuple[int, int]]], fi
 
 def problem5_2(inp: list[tuple[tuple[int, int], tuple[int, int]]]):
     return problem5_1_count(problem5_2_execute(inp, [[0 for _ in range(1000)] for _ in range(1000)]))
+
+
+def problem6_1(inp: list[int], n: int = 0) -> int:
+    match list(map(lambda x: x-1 if x != 0 else 6, inp)):
+        case gen:
+            return problem6_1(gen + [8] * len(list(filter(lambda x: x == 0, inp))), n=n+1) if n < 80 else len(inp)
+# Python isn't optimized for fp, so mostly problem 6_2 doesn't run, but if you have a supercomputer you may try
+
+
