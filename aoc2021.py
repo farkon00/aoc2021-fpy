@@ -1,9 +1,10 @@
+from pprint import pprint
 import sys
 
 from functools import reduce
 from types import FunctionType
 
-from aoc_inp import inp
+from aoc_inp import boards, draws
 
 sys.setrecursionlimit(1_000_000_000)
 
@@ -92,3 +93,51 @@ def problem3_2_get_co2_rate(inp: list[str]):
 
 def problem3_2(inp: list[str]):
     return int(problem3_2_get_oxygen_rate(inp), 2) * int(problem3_2_get_co2_rate(inp), 2) 
+
+
+def problem4_1_get_draw_boards(boards: list[list[list[int]]]) -> list[list[list[tuple[int, bool]]]]:
+    return list(map(lambda x: list(map(lambda x: list(map(lambda x: (x, False), x)), x)), boards))
+
+def problem4_1_draw_board(board: list[list[tuple[int, bool]]], draw: int) -> list[list[tuple[int, bool]]]:
+    return list(
+        map(lambda x: list(map(lambda y: (y[0], True) if y[0] == draw else y, x)), board)) 
+
+def problem4_1_draw_boards(boards: list[list[list[tuple[int, bool]]]], draw: int) -> list[list[list[tuple[int, bool]]]]:
+    return list(map(lambda x: problem4_1_draw_board(x, draw), boards))
+
+def problem4_1_check_rows(board: list[list[tuple[int, bool]]]) -> bool:
+    return any(map(lambda x: all(map(lambda y: y[1], x)), board))
+
+def problem4_1_check_cols(board: list[list[tuple[int, bool]]]) -> bool:
+    return any(all(board[y][x][1] for y in range(len(board))) for x in range(len(board[0])))
+
+def problem4_1_check_win(board: list[list[tuple[int, bool]]]) -> bool:
+    return problem4_1_check_rows(board) or problem4_1_check_cols(board)
+
+def problem4_1_get_best_board(boards: list[list[list[tuple[int, bool]]]], draws: list[int]) -> tuple[list[list[tuple[int, bool]]], int]:
+    match list(problem4_1_draw_boards(boards, draws[0])):
+        case new_boards:
+            match list(filter(problem4_1_check_win, new_boards)):
+                case [win_board]: 
+                    return (win_board, draws[0])
+                case [*_]:
+                    return problem4_1_get_best_board(new_boards, draws[1:])
+
+def problem4_1_get_score(board: list[list[tuple[int, bool]]], last_draw: int):
+    return sum(sum(j[0] if not j[1] else 0 for j in i) for i in board) * last_draw
+
+def problem4_1(boards: list[list[list[int]]], draws: list[int]):
+    return problem4_1_get_score(*problem4_1_get_best_board(problem4_1_get_draw_boards(boards), draws))
+
+
+def problem4_2_get_worst_board(boards: list[list[list[tuple[int, bool]]]], draws: list[int]) -> tuple[list[list[tuple[int, bool]]], int]:
+    match list(problem4_1_draw_boards(boards, draws[0])):
+        case new_boards:
+            match list(filter(lambda x: not problem4_1_check_win(x), new_boards)):
+                case []: 
+                    return (new_boards[0], draws[0])
+                case boards_left:
+                    return problem4_2_get_worst_board(boards_left, draws[1:])
+
+def problem4_2(boards: list[list[list[int]]], draws: list[int]):
+    return problem4_1_get_score(*problem4_2_get_worst_board(problem4_1_get_draw_boards(boards), draws))
